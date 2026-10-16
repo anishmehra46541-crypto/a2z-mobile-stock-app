@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="A2Z Mobile Solution Dharuhera online stock management"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#123b72">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>A2Z MOBILE SOLUTION DHARUHERA — Stock</title>
+<style>
+:root{--blue:#123b72;--blue2:#1e5aa8;--bg:#f3f6fb;--ink:#172033;--muted:#65738a;--green:#137a4b;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;padding:22px 16px 20px}
+.wrap{max-width:980px;margin:auto}header h1{font-size:21px;margin:0 0 5px}header p{margin:0;opacity:.85;font-size:13px}
+main{max-width:980px;margin:auto;padding:14px}
+.tabs{display:flex;gap:8px;overflow:auto;margin:0 0 14px}.tabs button{white-space:nowrap;border:1px solid #d5deeb;background:white;border-radius:12px;padding:11px 14px;color:var(--blue);font-weight:700}
+.tabs button.active{background:var(--blue);color:white}
+.panel{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 3px 14px #17345b0b}
+h2{font-size:17px;margin:0 0 14px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:5px;color:#35445b}
+input,select{width:100%;padding:12px;border:1px solid #ccd6e3;border-radius:10px;font:inherit;background:white;color:var(--ink);min-width:0}
+button.primary{background:var(--blue2);color:white;border:0;border-radius:11px;padding:12px 15px;font-weight:800;font:inherit;cursor:pointer}
+button.secondary{background:#edf3fb;color:var(--blue);border:1px solid #d4e0ef;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer}
+button.danger{background:#fff0ef;color:var(--red);border:1px solid #f5cbc7;border-radius:9px;padding:7px 10px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.stat{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:14px}.stat span{display:block;font-size:12px;color:var(--muted)}.stat strong{font-size:23px;display:block;margin-top:5px;overflow-wrap:anywhere}
+.small{font-size:12px;color:var(--muted)}.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px;min-width:540px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid #e9eef5}th{color:#526178;background:#f8faff}
+.hidden{display:none!important}.pill{border-radius:99px;padding:3px 8px;font-size:11px;font-weight:800;background:#e7f7ee;color:var(--green)}.pill.low{background:#fff0df;color:#9a4e00}
+.empty{text-align:center;padding:24px;color:var(--muted)}footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 16px 26px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.stat{padding:10px}.stat strong{font-size:18px}.stat span{font-size:11px}header h1{font-size:18px}main{padding:10px}.panel{padding:13px}}
+</style></head>
+<body>
+<header><div class="wrap"><h1>📱 A2Z MOBILE SOLUTION DHARUHERA</h1><p>Stock Management • Live Cloud Sync • Stock In / Stock Out</p></div></header>
+<section id="authPanel" class="panel" style="max-width:520px;margin:16px auto;padding:18px">
+<h2>Sign in to A2Z Stock</h2><p class="small">Use the account created for your shop. All signed-in shop devices share the same stock database.</p>
+<form id="loginForm"><div style="margin-bottom:10px"><label for="email">Email</label><input id="email" type="email" required autocomplete="username" placeholder="you@example.com"></div>
+<div><label for="password">Password</label><input id="password" type="password" required autocomplete="current-password" placeholder="Password"></div>
+<div class="actions"><button class="primary" type="submit">Sign In</button></div><p id="authMessage" class="small"></p></form>
+</section>
+<main id="mainApp" class="hidden">
+<div class="actions" style="justify-content:flex-end;margin:0 0 10px"><span id="syncStatus" class="small" style="align-self:center">Not connected</span><button id="signOutBtn" class="secondary">Sign Out</button></div>
+<div class="cards">
+ <div class="stat"><span>Total Items</span><strong id="totalItems">0</strong></div>
+ <div class="stat"><span>Total Stock Units</span><strong id="totalQty">0</strong></div>
+ <div class="stat"><span>Low Stock Items</span><strong id="lowCount">0</strong></div>
+</div>
+<nav class="tabs">
+<button class="active" data-tab="entry">➕ Stock Entry</button><button data-tab="items">📦 Inventory</button><button data-tab="history">📋 History</button><button data-tab="backup">💾 Backup</button>
+</nav>
+<section id="entry" class="panel">
+<h2>Add Stock Entry</h2>
+<form id="entryForm">
+<div class="grid">
+<div><label for="product">Item Name *</label><input id="product" required placeholder="e.g. Type-C Cable"></div>
+<div><label for="category">Category</label><select id="category"><option>Mobile Accessories</option><option>Mobile Phones</option><option>Display</option><option>Chargers</option><option>Covers</option><option>Battery</option><option>Body</option><option>Housing</option><option>Back Panel</option><option>CC Board</option><option>Earphones / Neckbands</option><option>Other</option></select></div>
+<div><label for="kind">Transaction Type *</label><select id="kind"><option value="in">Stock In (IN)</option><option value="out">Stock Out (OUT)</option></select></div>
+<div><label for="qty">Quantity (Units) *</label><input id="qty" type="number" min="1" step="1" required placeholder="e.g. 10"></div>
+<div><label for="date">Date *</label><input id="date" type="date" required></div>
+<div><label for="note">Note (Optional)</label><input id="note" placeholder="e.g. Supplier / Sale / Damaged"></div>
+</div>
+<div class="actions"><button class="primary" type="submit">Save Entry</button><button class="secondary" type="reset">Clear Form</button></div>
+<p class="small">Stock Out reduces the available quantity. You cannot remove more units than are in stock.</p>
+</form>
+</section>
+<section id="items" class="panel hidden">
+<h2>Inventory</h2><input id="searchItems" placeholder="🔎 Search items..." style="margin-bottom:12px">
+<div class="tablewrap"><table><thead><tr><th>Item</th><th>Category</th><th>Stock</th><th>Status</th><th>Action</th></tr></thead><tbody id="itemsBody"></tbody></table></div><div id="itemsEmpty" class="empty">No items yet. Add a stock entry first.</div>
+</section>
+<section id="history" class="panel hidden">
+<h2>Stock History</h2><div class="actions" style="margin:0 0 12px"><button id="exportCsv" class="secondary">Download CSV</button><button id="clearHistory" class="danger">Clear History</button></div>
+<div class="tablewrap"><table><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Quantity</th><th>Note</th></tr></thead><tbody id="historyBody"></tbody></table></div><div id="historyEmpty" class="empty">No history yet.</div>
+</section>
+<section id="backup" class="panel hidden">
+<h2>Data Backup & Restore</h2><p>Stock and history are stored in the online database and shared across signed-in devices. Download a backup periodically.</p>
+<div class="actions"><button class="primary" id="backupBtn">⬇ Download Backup</button><label class="secondary" style="display:inline-flex;align-items:center;cursor:pointer">⬆ Restore Backup<input type="file" id="restoreFile" accept="application/json" hidden></label></div>
+<hr style="border:0;border-top:1px solid #e5ebf3;margin:18px 0">
+<h2>Delete All Data</h2><p class="small">This action cannot be undone. Download a backup first.</p><button class="danger" id="resetAll">Delete All Stock & History</button>
+</section>
+</main><footer>Online database • Live sync across signed-in devices • A2Z MOBILE SOLUTION DHARUHERA</footer>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script>
+// SETUP REQUIRED: Replace the values below with your Firebase Web App config.
+const firebaseConfig = {
+  apiKey: "PASTE_YOUR_FIREBASE_API_KEY",
+  authDomain: "PASTE_YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "PASTE_YOUR_PROJECT_ID",
+  storageBucket: "PASTE_YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID",
+  appId: "PASTE_YOUR_FIREBASE_APP_ID"
+};
+const SHOP_ID = 'a2z-mobile-solution-dharuhera';
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toISOString().slice(0,10);
+$('date').value=today();
+let auth=null, cloud=null, itemsUnsub=null, historyUnsub=null, user=null;
+let db={items:{},history:[]};
+function configReady(){return firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith('PASTE_') && firebaseConfig.projectId && !firebaseConfig.projectId.startsWith('PASTE_')}
+function showMessage(message){$('authMessage').textContent=message}
+function itemCollection(){return cloud.collection('shops').doc(SHOP_ID).collection('items')}
+function historyCollection(){return cloud.collection('shops').doc(SHOP_ID).collection('history')}
+function itemDocId(key){return encodeURIComponent(key).replaceAll('.','%2E')}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function setSync(text){$('syncStatus').textContent=text}
+function render(){
+ const items=Object.values(db.items);$('totalItems').textContent=items.length;
+ $('totalQty').textContent=items.reduce((a,x)=>a+(Number(x.qty)||0),0);$('lowCount').textContent=items.filter(x=>x.qty<=3).length;
+ const q=($('searchItems').value||'').trim().toLocaleLowerCase();
+ const filtered=items.filter(x=>(x.name+' '+x.category).toLocaleLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name));
+ $('itemsBody').innerHTML=filtered.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.category)}</td><td><b>${x.qty}</b></td><td><span class="pill ${x.qty<=3?'low':''}">${x.qty<=3?'Low Stock':'In Stock'}</span></td><td><button class="secondary" onclick="quickOut('${encodeURIComponent(x.key)}')">OUT</button></td></tr>`).join('');
+ $('itemsEmpty').classList.toggle('hidden',filtered.length>0);
+ const hist=[...db.history];
+ $('historyBody').innerHTML=hist.map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.name)}</td><td><span class="pill ${x.type==='out'?'low':''}">${x.type==='in'?'Stock In (IN)':'Stock Out (OUT)'}</span></td><td>${x.qty}</td><td>${esc(x.note||'—')}</td></tr>`).join('');
+ $('historyEmpty').classList.toggle('hidden',hist.length>0);
+}
+function listenCloud(){
+ if(itemsUnsub)itemsUnsub(); if(historyUnsub)historyUnsub();
+ setSync('Connecting to cloud…');
+ itemsUnsub=itemCollection().onSnapshot(snap=>{db.items={};snap.forEach(doc=>{const x=doc.data();db.items[x.key||doc.id]={...x,key:x.key||doc.id}});render();setSync('● Live sync connected')},err=>{setSync('Sync error');console.error(err);alert('Could not sync stock: '+err.message)});
+ historyUnsub=historyCollection().orderBy('createdAt','desc').limit(500).onSnapshot(snap=>{db.history=[];snap.forEach(doc=>{const x=doc.data();db.history.push({...x,id:doc.id,createdAt:x.createdAt&&x.createdAt.toDate?x.createdAt.toDate().getTime():0})});render()},err=>console.error(err));
+}
+async function writeEntry({name,category,type,qty,date,note}){
+ const key=name.trim().toLocaleLowerCase(),ref=itemCollection().doc(itemDocId(key)),histRef=historyCollection().doc();let after=0;
+ await cloud.runTransaction(async tx=>{const snap=await tx.get(ref);const old=snap.exists?snap.data():{key,name:name.trim(),category,qty:0};const current=Number(old.qty)||0;if(type==='out'&&current<qty)throw new Error('INSUFFICIENT:'+current);after=current+(type==='in'?qty:-qty);tx.set(ref,{key,name:name.trim(),category:category||old.category||'Other',qty:after,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:user.email||user.uid},{merge:true});tx.set(histRef,{date,name:name.trim(),category,type,qty,note:note||'',after,createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdBy:user.email||user.uid});});
+ return after;
+}
+$('loginForm').addEventListener('submit',async e=>{e.preventDefault();if(!configReady()){showMessage('Firebase setup is not complete. Follow README_SETUP_HINDI.txt to add your Firebase config.');return}showMessage('Signing in…');try{await auth.signInWithEmailAndPassword($('email').value.trim(),$('password').value)}catch(err){showMessage(err.message)}});
+$('signOutBtn').onclick=()=>auth&&auth.signOut();
+$('entryForm').addEventListener('submit',async e=>{e.preventDefault();if(!user)return;const name=$('product').value.trim(),category=$('category').value,type=$('kind').value,qty=Number($('qty').value),date=$('date').value,note=$('note').value.trim();if(!name||!Number.isInteger(qty)||qty<1||!date)return;try{await writeEntry({name,category,type,qty,date,note});$('entryForm').reset();$('date').value=today();showTab('items');}catch(err){if(err.message.startsWith('INSUFFICIENT:'))alert('Insufficient stock. Only '+err.message.split(':')[1]+' units are available.');else alert('Could not save entry: '+err.message)}});
+window.quickOut=async function(encoded){const key=decodeURIComponent(encoded),item=db.items[key];if(!item)return;const n=prompt(`${item.name} — Current stock: ${item.qty} units. How many units to stock out?`);if(n===null)return;const qty=Number(n);if(!Number.isInteger(qty)||qty<1){alert('Please enter a valid quantity.');return}try{await writeEntry({name:item.name,category:item.category,type:'out',qty,date:today(),note:'Stock Out from inventory'})}catch(err){if(err.message.startsWith('INSUFFICIENT:'))alert('Stock changed on another device. Available: '+err.message.split(':')[1]);else alert('Could not update stock: '+err.message)}};
+function showTab(tab){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));['entry','items','history','backup'].forEach(id=>$(id).classList.toggle('hidden',id!==tab))}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+$('searchItems').addEventListener('input',render);
+function download(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('backupBtn').onclick=()=>download('A2Z-stock-backup-'+today()+'.json',JSON.stringify(db,null,2),'application/json');
+$('exportCsv').onclick=()=>{const rows=[['Date','Item','Category','Type','Quantity','Note','Stock After'],...db.history.map(x=>[x.date,x.name,x.category||'',x.type==='in'?'IN':'OUT',x.qty,x.note||'',x.after])];const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');download('A2Z-stock-history-'+today()+'.csv','\ufeff'+csv,'text/csv;charset=utf-8')};
+$('clearHistory').onclick=async()=>{if(!confirm('Delete all stock history? Current inventory will remain unchanged.'))return;try{const snap=await historyCollection().get();for(let i=0;i<snap.docs.length;i+=400){const batch=cloud.batch();snap.docs.slice(i,i+400).forEach(d=>batch.delete(d.ref));await batch.commit()}}catch(err){alert('Could not clear history: '+err.message)}};
+$('resetAll').onclick=async()=>{if(!confirm('Delete all stock and history for this shop? This cannot be undone.'))return;try{for(const col of [itemCollection(),historyCollection()]){const snap=await col.get();for(let i=0;i<snap.docs.length;i+=400){const batch=cloud.batch();snap.docs.slice(i,i+400).forEach(d=>batch.delete(d.ref));await batch.commit()}}alert('All shop stock and history deleted.')}catch(err){alert('Could not delete data: '+err.message)}};
+$('restoreFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!x.items||!Array.isArray(x.history))throw Error();if(!confirm('This will add/replace matching inventory items and add backup history to the cloud. Continue?'))return;for(const item of Object.values(x.items)){const ref=itemCollection().doc(itemDocId(item.key||item.name.toLowerCase()));await ref.set({...item,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:user.email||user.uid},{merge:true})}for(const entry of x.history){await historyCollection().add({...entry,createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdBy:user.email||user.uid})}alert('Backup imported to cloud.')}catch(err){alert('Could not restore backup: '+err.message)}finally{e.target.value=''}};
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
+if(configReady()){try{firebase.initializeApp(firebaseConfig);auth=firebase.auth();cloud=firebase.firestore();auth.onAuthStateChanged(u=>{user=u;$('authPanel').classList.toggle('hidden',!!u);$('mainApp').classList.toggle('hidden',!u);if(u){listenCloud()}else{if(itemsUnsub)itemsUnsub();if(historyUnsub)historyUnsub();db={items:{},history:[]};render();setSync('Signed out')}})}catch(e){showMessage('Firebase initialization failed: '+e.message)}}else{showMessage('Firebase config required. Open README_SETUP_HINDI.txt and follow the setup steps.')}
+</script></body></html>
